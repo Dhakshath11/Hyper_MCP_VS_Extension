@@ -1,0 +1,44 @@
+{
+  "name": "hyperex",
+  "displayName": "Hyper MCP Server",
+  "description": "MCP server for HyperExecute — run and control directly from VS Code",
+  "version": "0.0.1",
+  "publisher": "dhakshathamin",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:hyperEx.startServer",
+    "onCommand:hyperEx.stopServer"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "hyperEx.startServer",
+        "title": "Start Hyper MCP Server"
+      },
+      {
+        "command": "hyperEx.stopServer",
+        "title": "Stop Hyper MCP Server"
+      }
+    ]
+  },
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "bundle:mcp": "node scripts/bundle-mcp.js",
+    "vscode:prepublish": "npm run bundle:mcp && npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "22.x",
+    "@types/vscode": "^1.104.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.9.3"
+  }
+}
