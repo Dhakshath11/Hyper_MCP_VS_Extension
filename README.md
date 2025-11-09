@@ -35,3 +35,4 @@ Would you like me to add a quick check to ensure your `package.json` is ready fo
 
 ---------------------------------------------------------------------------------------------
 
+cursor --inspect-brk=9229 --extensionDevelopmentPath=/Users/dhakshath/Documents/MCP/mcp-vscode-ext/hyperEx/

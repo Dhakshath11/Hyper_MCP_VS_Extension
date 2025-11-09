@@ -10,6 +10,9 @@ let cachedServerPath: string | undefined;
 let startedShown = false;
 
 export async function activate(context: vscode.ExtensionContext) {
+  const isCursor = vscode.env.appName.toLowerCase().includes("cursor");
+  logger.debug(`Running inside ${isCursor ? "Cursor" : "VSCode"}`);
+
   // Defer activation message slightly to avoid blocking VS Code startup
   logger.info("--- Activating Extension ---");
   setTimeout(() => {
@@ -40,9 +43,9 @@ async function prewarmNode() {
     const warmup = spawn("node", ["-v"]);
     warmup.on("exit", () => {
       outputChannel.appendLine("🧠 Node prewarmed for fast launch");
-      logger.info(`"Node prewarmed got launched`);
+      logger.info(`Node prewarmed got launched`);
     });
-  } catch(error : any) {
+  } catch (error: any) {
     // Ignore prewarm failure
     logger.debug(`cached server path: ${error.message}`);
   }
@@ -149,7 +152,7 @@ export function deactivate() {
       serverProcess.kill();
       outputChannel.appendLine("Extension deactivated — server stopped 💤");
       logger.info(`Server Deactivated`);
-    } catch(err: any) {
+    } catch (err: any) {
       // Ignore errors
       logger.debug(`Error deactivating server: ${err.message}`);
     }

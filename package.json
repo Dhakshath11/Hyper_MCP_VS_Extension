@@ -5,15 +5,13 @@
   "version": "0.0.1",
   "publisher": "dhakshathamin",
   "engines": {
-    "vscode": "^1.104.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:hyperEx.startServer",
-    "onCommand:hyperEx.stopServer"
+   "*"
   ],
   "contributes": {
     "commands": [
@@ -31,7 +29,9 @@
   "scripts": {
     "compile": "tsc -p ./",
     "bundle:mcp": "node scripts/bundle-mcp.js",
-    "vscode:prepublish": "npm run bundle:mcp && npm run compile",
+    "link:mcp": "cd mcp-server && npm link",
+    "build:full": "npm run bundle:mcp && npm run compile && npm run link:mcp",
+    "vscode:prepublish": "npm run build:full",
     "package": "vsce package"
   },
   "devDependencies": {
