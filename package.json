@@ -7,11 +7,15 @@
   "engines": {
     "vscode": "^1.80.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dhakshath11/Hyper_MCP_VS_Extension.git"
+  },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-   "*"
+    "*"
   ],
   "contributes": {
     "commands": [
@@ -28,15 +32,17 @@
   "main": "./out/extension.js",
   "scripts": {
     "compile": "tsc -p ./",
-    "bundle:mcp": "node scripts/bundle-mcp.js",
-    "link:mcp": "cd mcp-server && npm link",
-    "build:full": "npm run bundle:mcp && npm run compile && npm run link:mcp",
+    "bundle:mcp": "node scripts/bundle-mcp.cjs",
+    "build:full": "npm run bundle:mcp && npm run compile",
     "vscode:prepublish": "npm run build:full",
     "package": "vsce package"
   },
+  "bin": {
+    "hyperex": "./scripts/server-bridge.cjs"
+  },
   "devDependencies": {
-    "@types/node": "22.x",
-    "@types/vscode": "^1.104.0",
+    "@types/node": "^24.10.0",
+    "@types/vscode": "^1.80.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.0.0",
     "typescript": "^5.9.3"

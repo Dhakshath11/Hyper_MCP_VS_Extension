@@ -36,3 +36,12 @@ Would you like me to add a quick check to ensure your `package.json` is ready fo
 ---------------------------------------------------------------------------------------------
 
 cursor --inspect-brk=9229 --extensionDevelopmentPath=/Users/dhakshath/Documents/MCP/mcp-vscode-ext/hyperEx/
+
+
+Install:
+1. Cmd+shift+P -> Extensions: Install from VSIX
+
+Uninstall:
+1. Go to Extension Select the extension -> Uninstall
+2. Then cmd+Q
+3. rm -rf ~/.vscode/extensions/dhakshathamin.hyperex-0.0.1

@@ -4,3 +4,4 @@ mcp-server/
 out/
 package-lock.json
 .DS_Store
+hyperex-*
