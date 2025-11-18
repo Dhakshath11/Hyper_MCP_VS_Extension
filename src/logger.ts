@@ -2,17 +2,19 @@
  * logger.ts
  *
  * Utility functions for persistent file-based logging in Node.js projects.
+ * Clean + injectable logging with both file and OutputChannel support
  *
  * Author: Dhakshath Amin
- * Date: 9 October 2025
+ * Date: 17 November 2025
  * Description:
- *   - Provides a single persistent log file: hyperex_mcp.log
+ *   - Provides a single persistent log file: extension.log
  *   - Appends all logs with timestamp and log level (info, warn, debug, error)
- *   - File-only logging (no console output)
+ *   - File-only logging & OutputChannel logging for VS code extension
  *   - Includes cleanup method to remove log lines older than 7 days
  *
  * Key Features:
  * - Safe, append-only logging for audit and debugging
+ * - Adds logs into OUTPUT Channel of VS Code
  * - Timestamped log entries for traceability
  * - Supports info, debug, warn, error levels
  * - Designed for use in LambdaTest/HyperExecute automation tools
@@ -21,10 +23,22 @@
 
 import fs from "fs";
 import path from "path";
+import * as vscode from "vscode";
 
-const LOG_FILE = path.join(__dirname,"..", "extension.log");
+const LOG_FILE = path.join(__dirname, "..", "extension.log");
 
 type LogLevel = "INFO" | "DEBUG" | "WARN" | "ERROR";
+
+// Only expose appendLine from VSCode OutputChannel
+export type OutputLike = Pick<vscode.OutputChannel, "appendLine">;
+let output: OutputLike | null = null;
+
+/**
+ * Allows extension.ts to inject its OutputChannel instance
+ */
+export function attachOutputChannel(channel: OutputLike) {
+    output = channel;
+}
 
 /**
  * Utility: Format current timestamp
@@ -61,13 +75,15 @@ function getCallerInfo(): string {
 function writeLog(level: LogLevel, message: string, error?: unknown) {
     const timestamp = getTimestamp();
     const caller = getCallerInfo();
-    const formatted =
+    const formatted: string =
         `${timestamp} | ${level.padEnd(5)} | [${caller}] ${message}` +
         (error instanceof Error ? ` | ${error.stack || error.message}` : "") +
         "\n";
 
-    // Append to file (create if not exists)
+    // Append to Log file (create if not exists)
     fs.appendFileSync(LOG_FILE, formatted, { encoding: "utf-8" });
+    // Write to VSCode outputChannel (if injected) only if INFO or ERROR
+    (level === 'INFO' || level === 'ERROR') && output?.appendLine(formatted);
 }
 
 /**
@@ -84,16 +100,13 @@ const logger = {
      */
     cleanOldLogs: () => {
         if (!fs.existsSync(LOG_FILE)) return;
-
         const lines = fs.readFileSync(LOG_FILE, "utf-8").split("\n").filter(Boolean);
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
         const validLines = lines.filter((line) => {
             const timestampPart = line.split(" | ")[0];
             const lineDate = new Date(timestampPart);
             return !isNaN(lineDate.getTime()) && lineDate >= sevenDaysAgo;
         });
-
         fs.writeFileSync(LOG_FILE, validLines.join("\n") + "\n", "utf-8");
     },
 };

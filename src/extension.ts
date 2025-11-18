@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import { spawn, ChildProcess } from "child_process";
-import logger from "./logger.js";
+import logger, {attachOutputChannel} from "./logger.js";
 
 let serverProcess: ChildProcess | undefined;
 let outputChannel: vscode.OutputChannel;
@@ -10,20 +10,21 @@ let startedShown = false;
 let bridgePathGlobal: string;
 
 export async function activate(context: vscode.ExtensionContext) {
+  outputChannel = vscode.window.createOutputChannel("Hyper MCP Server");
+  attachOutputChannel(outputChannel);
+
   const isCursor = vscode.env.appName.toLowerCase().includes("cursor");
-  logger.debug(`Running inside ${isCursor ? "Cursor" : "VSCode"}`);
+  logger.debug(`🌐 Running inside ${isCursor ? "Cursor" : "VSCode"}`);
 
   // Notify activation
-  logger.info("--- Activating Extension ---");
+  logger.info("🔄 Activating Extension");
   setTimeout(() => {
     vscode.window.showInformationMessage("Hyper MCP Extension activated ⚡");
   }, 500);
 
-  outputChannel = vscode.window.createOutputChannel("Hyper MCP Server");
-
   // Resolve bridge script path once
   bridgePathGlobal = path.resolve(__dirname, "..", "scripts", "server-bridge.cjs");
-  logger.debug(`Bridge script path: ${bridgePathGlobal}`);
+  logger.debug(`🔧 Bridge script path: ${bridgePathGlobal}`);
 
   // Register commands
   const startCmd = vscode.commands.registerCommand("hyperEx.startServer", () =>
@@ -31,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   const stopCmd = vscode.commands.registerCommand("hyperEx.stopServer", stopServer);
   context.subscriptions.push(startCmd, stopCmd);
+  logger.debug(`🧩 Start & Stop command registered`);
 
   // Prewarm Node (light optimization)
   prewarmNode();
@@ -43,11 +45,10 @@ async function prewarmNode() {
   try {
     const warmup = spawn("node", ["-v"]);
     warmup.on("exit", () => {
-      outputChannel.appendLine("🧠 Node prewarmed for fast launch");
-      logger.info("Node prewarmed got launched");
+      logger.debug("🧠 Node prewarmed for fast launch");
     });
   } catch (error: any) {
-    logger.debug(`Prewarm failed: ${error.message}`);
+    logger.error(`❌ Prewarm failed: ${error.message}`);
   }
 }
 
@@ -55,6 +56,7 @@ async function prewarmNode() {
  * Set up a VSCode terminal alias *after* the server starts.
  */
 async function setupTerminalAlias(context: vscode.ExtensionContext) {
+  logger.debug("⚙️ Setting up the terminal");
   const bridgePath = bridgePathGlobal;
 
   // Create/reuse a terminal specifically for CLI
@@ -71,8 +73,7 @@ async function setupTerminalAlias(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(terminal);
   const msg = "🧩 Added Hyper MCP CLI alias to VSCode terminal (after server start)";
-  outputChannel.appendLine(msg);
-  logger.info(msg);
+  logger.debug(msg);
 }
 
 /**
@@ -81,7 +82,7 @@ async function setupTerminalAlias(context: vscode.ExtensionContext) {
 async function startServer(bridgePath: string, context: vscode.ExtensionContext) {
   if (serverProcess) {
     vscode.window.showInformationMessage("Server is already running.");
-    logger.info("Server already running");
+    logger.info("⚠️ Server already running");
     return;
   }
 
@@ -90,16 +91,13 @@ async function startServer(bridgePath: string, context: vscode.ExtensionContext)
 
   if (!fs.existsSync(bridgePath)) {
     vscode.window.showErrorMessage(`Bridge script not found at: ${bridgePath} ❌`);
-    outputChannel.appendLine(`❌ Bridge script missing: ${bridgePath}`);
-    logger.error(`Bridge script not found at ${bridgePath}`);
+    logger.error(`❌ Bridge script not found at ${bridgePath}`);
     return;
   }
 
   outputChannel.show(true);
-  outputChannel.appendLine("🚀 Launching Hyper MCP Server via bridge...");
-  outputChannel.appendLine(`Bridge path: ${bridgePath}`);
-  logger.debug(`Launching MCP via bridge: ${bridgePath}`);
-  logger.debug(`Working directory: ${cwd}`);
+  logger.debug(`🚀 Launching MCP via bridge: ${bridgePath}`);
+  logger.debug(`🔍 Working directory: ${cwd}`);
 
   try {
     // Spawn the bridge
@@ -108,19 +106,18 @@ async function startServer(bridgePath: string, context: vscode.ExtensionContext)
       stdio: ["ignore", "pipe", "pipe"],
     });
 
-    outputChannel.appendLine("✅ Spawn initiated via bridge");
-    logger.debug(`serverProcess: ${serverProcess}`);
+    logger.debug(`✅ Spawn initiated via bridge, serverProcess : ${serverProcess}`);
 
     serverProcess.on("spawn", () => {
-      outputChannel.appendLine("🧠 MCP process spawned via bridge, waiting for logs...");
+      logger.debug(`🐢 MCP process spawned via bridge, waiting for mcp-server response..`);
     });
 
     serverProcess.stdout?.on("data", (data) => {
-      outputChannel.append(data.toString());
+      logger.debug(data.toString());
       if (!startedShown) {
         startedShown = true;
-        vscode.window.showInformationMessage("MCP Server started successfully ✅");
-        logger.info("MCP Server started successfully");
+        vscode.window.showInformationMessage("MCP Server Started ✅");
+        logger.info("🔥 MCP Server started successfully");
 
         // ✅ Only after the server starts, add the CLI alias
         setupTerminalAlias(context);
@@ -128,22 +125,19 @@ async function startServer(bridgePath: string, context: vscode.ExtensionContext)
     });
 
     serverProcess.stderr?.on("data", (data: Buffer) => {
-      outputChannel.append(`[ERR] ${data.toString()}`);
-      logger.error(`[ERR] ${data.toString()}`);
+      logger.error(`💥 [ERR] ${data.toString()}`);
     });
 
     serverProcess.on("exit", (code) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      outputChannel.appendLine(`\n⏱️ Server exited with code ${code} after ${duration}s`);
-      vscode.window.showWarningMessage(`MCP Server exited (code ${code})`);
-      logger.debug(`Server exited with code ${code} after ${duration}s`);
+      logger.debug(`\n⏱️ Server exited with code ${code} after ${duration}s`);
+      vscode.window.showWarningMessage(`MCP Server exited`);
       serverProcess = undefined;
       startedShown = false;
     });
   } catch (error: any) {
     vscode.window.showErrorMessage(`Failed to start server: ${error.message} ❌`);
-    outputChannel.appendLine(`❌ Error: ${error.stack || error.message}`);
-    logger.error(`Failed to start server: ${error.message}`);
+    logger.error(`❌ Failed to start server: ${error.message}`);
   }
 }
 
@@ -153,20 +147,18 @@ async function startServer(bridgePath: string, context: vscode.ExtensionContext)
 async function stopServer() {
   if (serverProcess) {
     try {
-      logger.info("Stopping server...");
+      logger.info("🔄 Stopping server...");
       serverProcess.kill();
       vscode.window.showInformationMessage("MCP Server stopped 🛑");
-      outputChannel.appendLine("🛑 MCP Server stopped manually by user");
-      logger.debug("Server stopped successfully");
+      logger.debug("🛑 MCP Server stopped manually by user");
       serverProcess = undefined;
     } catch (err: any) {
       vscode.window.showErrorMessage(`Error stopping server: ${err.message} ❌`);
-      outputChannel.appendLine(`❌ Stop error: ${err.stack || err.message}`);
-      logger.error(`Error stopping server: ${err.message}`);
+      logger.error(`❌ Error stopping server: ${err.message}`);
     }
   } else {
     vscode.window.showInformationMessage("No server running ❓");
-    logger.debug("No server running");
+    logger.info("⚠️ No server running");
   }
 }
 
@@ -177,10 +169,9 @@ export function deactivate() {
   if (serverProcess) {
     try {
       serverProcess.kill();
-      outputChannel.appendLine("Extension deactivated — server stopped 💤");
-      logger.info("Server deactivated");
+      logger.info("💤 Server deactivated");
     } catch (err: any) {
-      logger.debug(`Error deactivating server: ${err.message}`);
+      logger.error(`❌ Error deactivating server: ${err.message}`);
     }
   }
 }
