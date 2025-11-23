@@ -1,31 +1,7 @@
-# 🧹 Exclude development & config directories
-**/.vscode/**
-**/.git/**
-**/.github/**
-**/src/**
-**/tests/**
-**/coverage/**
-**/tmp/**
-hyperex-*
-
-# 🧩 Exclude development/build files
-**/*.ts
-**/*.log
-tsconfig.json
-package-lock.json
-
-# 📄 Exclude documentation and misc files (README included separately via "files" if needed)
-README.md
-
-# 🚫 Exclude dev-only node_modules at root
 node_modules/
-
-# ✅ Keep only necessary files inside mcp-server
-!mcp-server/node_modules/**
-!mcp-server/package.json
-!mcp-server/dist/**
-!mcp-server/bin/**
-
-# ✅ Include compiled output & CLI bridge
-!out/**
-!scripts/server-bridge.cjs
+out/**/*.map
+tsconfig.json
+scripts/
+src/
+*.log
+hyperex-*

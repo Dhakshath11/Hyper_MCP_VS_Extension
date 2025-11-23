@@ -3,7 +3,9 @@
   "displayName": "Hyper MCP Server",
   "description": "MCP server for HyperExecute — run and control directly from VS Code",
   "version": "0.0.1",
-  "publisher": "dhakshathamin",
+  "author": "Dhakshath Amin",
+  "publisher": "lambdatest",
+  "license": "ISC",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -20,12 +22,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "hyperEx.startServer",
-        "title": "Start Hyper MCP Server"
-      },
-      {
-        "command": "hyperEx.stopServer",
-        "title": "Stop Hyper MCP Server"
+        "command": "hyperEx.createServerConfig",
+        "title": "Create HyperX Server (mcp.json)"
       }
     ]
   },
@@ -41,10 +39,11 @@
     "hyperex": "./scripts/server-bridge.cjs"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/vscode": "^1.80.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.0.0",
     "typescript": "^5.9.3"
-  }
+  },
+  "icon": "icon.png"
 }
